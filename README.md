@@ -1,1 +1,1 @@
-# bmi741-final-project
+# bmi706-final-project
