@@ -84,7 +84,6 @@ with st.sidebar:
         (list_for_dropdown))
     st.markdown("#")
     st.markdown("#")
-    st.image("./hms_logo.png", width=300)
 
 filtered_mut_df = mut_df[mut_df['Consequence'].isin(valid_mutation_types)]
 filtered_cna_df = cna_df
