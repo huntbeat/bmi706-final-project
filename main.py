@@ -41,7 +41,7 @@ def load_cna_data():
 
 @st.cache_data
 def load_data():
-    df = pd.read_table("msk_met_2021_clinical_data.tsv", sep='\t')
+    df = pd.read_table("data/msk_met_2021_clinical_data.tsv", sep='\t')
     return df
 
 
