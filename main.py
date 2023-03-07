@@ -84,6 +84,7 @@ with st.sidebar:
         (list_for_dropdown))
     st.markdown("#")
     st.markdown("#")
+    st.image("hms_logo.png", width=300)
 
 filtered_mut_df = mut_df[mut_df['Consequence'].isin(valid_mutation_types)]
 filtered_cna_df = cna_df
@@ -125,12 +126,11 @@ if figure_radio == "Clinical information":
 elif figure_radio == "Primary vs Metastasis":
     st.write("TODO by Jason")
 elif figure_radio == "Difference in organ sites":
-    with st.spinner("Wrangling... It's a lot of genes, may take a minute or two."):
+    with st.spinner("Loading... It's a lot of genes, may take a minute or two."):
         valid_genes = list(cna_genes.intersection(mut_genes))
         heatmap_df = build_heatmap_df(merged_sample_df, valid_genes, all_organs)
         st.write(build_heatmap(heatmap_df))
         st.write(build_chart(heatmap_df, 'NCOR1'))
-    st.success('Rendered!')
 
 # with col3:
 #    st.write("")
