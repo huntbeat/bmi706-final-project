@@ -25,10 +25,6 @@ def fraction(row):
         return int(row[row.name]) / int(total)
 
 def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
-    #cna_df = pd.read_csv("data/data_cna.txt", sep="\t")
-    #mut_df = pd.read_csv("data/data_mutations.txt", sep="\t")
-    #sample_df = pd.read_table("data/msk_met_2021_clinical_data.tsv",sep='\t')
-
     sample_df['Sample_Types'] = "None"
     sample_df.loc[(sample_df['Sample Type'] == 'Primary') & (sample_df['Metastatic patient'] == True), 
                   'Sample_Types'] = "Primary_from_Met"
@@ -119,8 +115,7 @@ def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
     mut_heatmap = base.mark_rect().encode(
         alt.Color('Mutation_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
     ).properties(width=500,title='Mutation Heatmap')
-
-    
+  
     #cna plot
     bar_cna_df_T = filtered_cna_df.set_index('Hugo_Symbol').T
     bar_cna_df_T.reset_index(inplace=True)
@@ -140,9 +135,7 @@ def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
         color=alt.Color('Copy_Number_Status:N', scale=alt.Scale(domain=['Deletion', 'Amplification'])),
         column= alt.Column('Sample_Types:N', header=alt.Header(title=None)) 
     ).properties(
-        width=180,
-        title='Copy Number Count'  
-    )
+        width=180,title='Copy Number Count')
     
     #variant classification plot
     vc_mut_df = filtered_mut_df[["Hugo_Symbol", "Tumor_Sample_Barcode", "Variant_Classification"]]
