@@ -81,7 +81,7 @@ def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
             deletion_count = count_deletion(merged_sample_df, gene,pm)
             mutation_count = count_mutation(merged_sample_df, gene,pm)
             counts.append({
-                'gene': gene,
+                'Gene': gene,
                 'Sample_Types': pm,
                 'Amplification': amplification_count,
                 'Deletion': deletion_count,
@@ -96,7 +96,7 @@ def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
 
     # Base chart
     base = alt.Chart(counts_df).encode(
-        alt.X('gene', sort=alt.EncodingSortField(field='gene', op='count', order='ascending')),
+        alt.X('Gene', sort=alt.EncodingSortField(field='Gene', op='count', order='ascending')),
         alt.Y('Sample_Types',  axis=alt.Axis(labelFontSize=9),
               sort=alt.EncodingSortField(field='Sample_Types', op='count', order='ascending')),
     )
@@ -143,11 +143,11 @@ def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
     vc_mut_df = vc_mut_df.rename(columns={'Tumor_Sample_Barcode': 'SAMPLE_ID'})
 
     merged_vc_mut_df = sample_df_filtered_cancer_types.merge(vc_mut_df, on='SAMPLE_ID', how='inner')
-    grouped_df = merged_vc_mut_df.groupby(['Hugo_Symbol', 'Sample_Types', 'Variant_Classification']).size().reset_index(name='count')
+    grouped_df = merged_vc_mut_df.groupby(['Hugo_Symbol', 'Sample_Types', 'Variant_Classification']).size().reset_index(name='Count')
 
     vc_chart = alt.Chart(grouped_df).mark_bar().encode(
         x=alt.X('Hugo_Symbol:N', title='Gene'),
-        y='count:Q',
+        y='Count:Q',
         color='Variant_Classification:N',
         column=alt.Column('Sample_Types:N', header=alt.Header(title=None)) 
     ).properties(width=180, title='Variant Classification Count')
