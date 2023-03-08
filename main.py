@@ -1,5 +1,6 @@
 from seunghun import get_seunghun_charts
 from hunter import *
+from jason import *
 
 import altair as alt
 import pandas as pd
@@ -124,7 +125,11 @@ if figure_radio == "Clinical information":
     seunghun_chart = get_seunghun_charts(selected_cancer, all_cancer_types)
     st.altair_chart(seunghun_chart, use_container_width=True)
 elif figure_radio == "Primary vs Metastasis":
-    st.write("TODO by Jason")
+    valid_genes = list(cna_genes.intersection(mut_genes))
+    default_genes = valid_genes[:10]
+    selected_genes = st.sidebar.multiselect("Select genes", valid_genes, default_genes)
+    jason_chart = get_jason_charts(selected_cancer, selected_genes)
+    st.altair_chart(jason_chart, use_container_width=True)
 elif figure_radio == "Difference in organ sites":
     with st.spinner("Loading... It's a lot of genes, may take a minute or two."):
         valid_genes = list(cna_genes.intersection(mut_genes))

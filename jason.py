@@ -51,7 +51,7 @@ def get_jason_charts(selected_cancer, valid_genes):
 
     sample_df_filtered_cancer_types = None
     if selected_cancer != "Pan Cancer":
-        sample_df_filtered_cancer_types = sample_df[sample_df["Cancer Type"].isin(selected_cancer)]
+        sample_df_filtered_cancer_types = sample_df[sample_df["Cancer Type"].isin([selected_cancer])]
     else:
         sample_df_filtered_cancer_types = sample_df
 
@@ -110,20 +110,44 @@ def get_jason_charts(selected_cancer, valid_genes):
     amp_heatmap = base.mark_rect().encode(
         alt.Color('Amplification_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
         opacity=alt.Opacity('Amplification_Fraction:Q', scale=alt.Scale(range=[0.2, 1]), title ='fraction'),
-    ).properties(title='Amplification Heatmap')
+    ).properties(width=500,title='Amplification Heatmap')
 
     # Create Deletion heatmap
     del_heatmap = base.mark_rect().encode(
         alt.Color('Deletion_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
         opacity=alt.Opacity('Deletion_Fraction:Q', scale=alt.Scale(range=[0.2, 1]),title ='fraction'),
-    ).properties(title='Deletion Heatmap')
+    ).properties(width=500,title='Deletion Heatmap')
 
     # Create Mutation heatmap
     mut_heatmap = base.mark_rect().encode(
         alt.Color('Mutation_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
         opacity=alt.Opacity('Mutation_Fraction:Q', scale=alt.Scale(range=[0.2, 1]),title ='fraction'),
-    ).properties(title='Mutation Heatmap')
+    ).properties(width=500,title='Mutation Heatmap')
 
-    combined_heatmap = amp_heatmap & del_heatmap & mut_heatmap
     
+    #cna plot
+    bar_cna_df_T = filtered_cna_df.set_index('Hugo_Symbol').T
+    bar_cna_df_T.reset_index(inplace=True)
+    bar_cna_df_T = bar_cna_df_T.rename(columns={'index': 'SAMPLE_ID'})
+    merged_bar_cna_df_T = sample_df_filtered_cancer_types.merge(bar_cna_df_T, on='SAMPLE_ID', how='left')   
+    index = merged_bar_cna_df_T.columns.get_loc('patient_count')
+    cna_id_vars = merged_bar_cna_df_T.columns[:index+1]
+    df_tall = pd.melt(merged_bar_cna_df_T, id_vars=cna_id_vars, var_name='Gene', value_name='Copy_Number')
+    df_tall['Copy_Number_Status'] = df_tall['Copy_Number'].apply(
+        lambda x: 'Amplification' if x > 0 else ('Deletion' if x < 0 else None)
+    )
+    cna_counts = df_tall.groupby(['Gene', 'Sample_Types', 'Copy_Number_Status']).size().reset_index(name='Count')
+
+    cna_chart = alt.Chart(cna_counts).mark_bar().encode(
+        x='Gene:N',
+        y='Count:Q',
+        color=alt.Color('Copy_Number_Status:N', scale=alt.Scale(domain=['Deletion', 'Amplification'])),
+        column= alt.Column('Sample_Types:N', header=alt.Header(title=None,titleColor='blue')) 
+    ).properties(
+        width=180,
+        title='Copy Number Count'  
+    )
+
+    combined_heatmap = amp_heatmap & del_heatmap & mut_heatmap & cna_chart
+
     return combined_heatmap
