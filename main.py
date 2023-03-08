@@ -42,6 +42,7 @@ def load_cna_data():
 sample_df = load_sample_data()
 cna_df = load_cna_data()
 mut_df = load_mutation_data()
+cli_sample_df = pd.read_table("data/msk_met_2021_clinical_data.tsv",sep='\t')
 
 all_cancer_types = sample_df["CANCER_TYPE"].unique()
 all_cancer_genes = cna_df['Hugo_Symbol'].unique()
@@ -127,8 +128,8 @@ if figure_radio == "Clinical information":
 elif figure_radio == "Primary vs Metastasis":
     valid_genes = list(cna_genes.intersection(mut_genes))
     default_genes = valid_genes[:10]
-    selected_genes = st.sidebar.multiselect("Select genes", valid_genes, default_genes)
-    jason_chart = get_jason_charts(selected_cancer, selected_genes)
+    selected_genes = st.sidebar.multiselect("Choose genes", valid_genes, default_genes)
+    jason_chart = get_jason_charts(selected_cancer, selected_genes, cna_df, mut_df, cli_sample_df)
     st.altair_chart(jason_chart, use_container_width=True)
 elif figure_radio == "Difference in organ sites":
     with st.spinner("Loading... It's a lot of genes, may take a minute or two."):

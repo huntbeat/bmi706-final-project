@@ -24,12 +24,10 @@ def fraction(row):
     else:
         return int(row[row.name]) / int(total)
 
-def get_jason_charts(selected_cancer, valid_genes):
-    sample_df = pd.read_csv("data/data_clinical_sample.txt", sep="\t",skiprows=4)
-    cna_df = pd.read_csv("data/data_cna.txt", sep="\t")
-    mut_df = pd.read_csv("data/data_mutations.txt", sep="\t")
-
-    sample_df = pd.read_table("data/msk_met_2021_clinical_data.tsv",sep='\t')
+def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
+    #cna_df = pd.read_csv("data/data_cna.txt", sep="\t")
+    #mut_df = pd.read_csv("data/data_mutations.txt", sep="\t")
+    #sample_df = pd.read_table("data/msk_met_2021_clinical_data.tsv",sep='\t')
 
     sample_df['Sample_Types'] = "None"
     sample_df.loc[(sample_df['Sample Type'] == 'Primary') & (sample_df['Metastatic patient'] == True), 
@@ -145,7 +143,8 @@ def get_jason_charts(selected_cancer, valid_genes):
         width=180,
         title='Copy Number Count'  
     )
-
+    
+    #variant classification plot
     vc_mut_df = filtered_mut_df[["Hugo_Symbol", "Tumor_Sample_Barcode", "Variant_Classification"]]
     vc_mut_df = vc_mut_df.groupby(["Tumor_Sample_Barcode", "Hugo_Symbol","Variant_Classification"]).size().reset_index(name='Count')
     vc_mut_df = vc_mut_df.rename(columns={'Tumor_Sample_Barcode': 'SAMPLE_ID'})
