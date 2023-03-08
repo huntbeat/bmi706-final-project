@@ -65,12 +65,12 @@ def get_jason_charts(selected_cancer, valid_genes):
                                                                                 # Left is filtered, right is not
                                                                                 how='left')
     # 3. Wrangle with mutation dataframe.
-    filtered_mut_df = filtered_mut_df[["Hugo_Symbol", "Tumor_Sample_Barcode", "Variant_Classification"]]
-    filtered_mut_df = filtered_mut_df.groupby(["Tumor_Sample_Barcode", "Hugo_Symbol"]).size().reset_index(name='Count')
-    filtered_mut_df = pd.pivot(filtered_mut_df, columns=['Hugo_Symbol'], index=["Tumor_Sample_Barcode"], values="Count").add_prefix("mut_").reset_index()
-    filtered_mut_df = filtered_mut_df.rename(columns={'Tumor_Sample_Barcode': 'SAMPLE_ID'})
+    filtered_mut_heat = filtered_mut_df[["Hugo_Symbol", "Tumor_Sample_Barcode", "Variant_Classification"]]
+    filtered_mut_heat = filtered_mut_heat.groupby(["Tumor_Sample_Barcode", "Hugo_Symbol"]).size().reset_index(name='Count')
+    filtered_mut_heat = pd.pivot(filtered_mut_heat, columns=['Hugo_Symbol'], index=["Tumor_Sample_Barcode"], values="Count").add_prefix("mut_").reset_index()
+    filtered_mut_heat = filtered_mut_heat.rename(columns={'Tumor_Sample_Barcode': 'SAMPLE_ID'})
     # 4. Merge mutation into sample table.
-    merged_sample_df = sample_cna_df_filtered_cancer_types.merge(filtered_mut_df,
+    merged_sample_df = sample_cna_df_filtered_cancer_types.merge(filtered_mut_heat,
                                                                 on='SAMPLE_ID',
                                                                 # Left is filtered by cancer type, right is not
                                                                 how='left')
@@ -142,12 +142,26 @@ def get_jason_charts(selected_cancer, valid_genes):
         x='Gene:N',
         y='Count:Q',
         color=alt.Color('Copy_Number_Status:N', scale=alt.Scale(domain=['Deletion', 'Amplification'])),
-        column= alt.Column('Sample_Types:N', header=alt.Header(title=None,titleColor='blue')) 
+        column= alt.Column('Sample_Types:N', header=alt.Header(title=None)) 
     ).properties(
         width=180,
         title='Copy Number Count'  
     )
 
-    combined_heatmap = amp_heatmap & del_heatmap & mut_heatmap & cna_chart
+    vc_mut_df = filtered_mut_df[["Hugo_Symbol", "Tumor_Sample_Barcode", "Variant_Classification"]]
+    vc_mut_df = vc_mut_df.groupby(["Tumor_Sample_Barcode", "Hugo_Symbol","Variant_Classification"]).size().reset_index(name='Count')
+    vc_mut_df = vc_mut_df.rename(columns={'Tumor_Sample_Barcode': 'SAMPLE_ID'})
+
+    merged_vc_mut_df = sample_df_filtered_cancer_types.merge(vc_mut_df, on='SAMPLE_ID', how='inner')
+    grouped_df = merged_vc_mut_df.groupby(['Hugo_Symbol', 'Sample_Types', 'Variant_Classification']).size().reset_index(name='count')
+
+    vc_chart = alt.Chart(grouped_df).mark_bar().encode(
+        x=alt.X('Hugo_Symbol:N', title='Gene'),
+        y='count:Q',
+        color='Variant_Classification:N',
+        column=alt.Column('Sample_Types:N', header=alt.Header(title=None)) 
+    ).properties(width=180, title='Variant Classification Count')
+
+    combined_heatmap = amp_heatmap & del_heatmap & mut_heatmap & cna_chart & vc_chart
 
     return combined_heatmap
