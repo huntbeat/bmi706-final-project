@@ -103,25 +103,23 @@ def get_jason_charts(selected_cancer, valid_genes):
     # Base chart
     base = alt.Chart(counts_df).encode(
         alt.X('gene', sort=alt.EncodingSortField(field='gene', op='count', order='ascending')),
-        alt.Y('Sample_Types', sort=alt.EncodingSortField(field='Sample_Types', op='count', order='ascending')),
+        alt.Y('Sample_Types',  axis=alt.Axis(labelFontSize=9),
+              sort=alt.EncodingSortField(field='Sample_Types', op='count', order='ascending')),
     )
 
     # Create Amplification heatmap
     amp_heatmap = base.mark_rect().encode(
         alt.Color('Amplification_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
-        opacity=alt.Opacity('Amplification_Fraction:Q', scale=alt.Scale(range=[0.2, 1]), title ='fraction'),
     ).properties(width=500,title='Amplification Heatmap')
 
     # Create Deletion heatmap
     del_heatmap = base.mark_rect().encode(
         alt.Color('Deletion_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
-        opacity=alt.Opacity('Deletion_Fraction:Q', scale=alt.Scale(range=[0.2, 1]),title ='fraction'),
     ).properties(width=500,title='Deletion Heatmap')
 
     # Create Mutation heatmap
     mut_heatmap = base.mark_rect().encode(
         alt.Color('Mutation_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
-        opacity=alt.Opacity('Mutation_Fraction:Q', scale=alt.Scale(range=[0.2, 1]),title ='fraction'),
     ).properties(width=500,title='Mutation Heatmap')
 
     
@@ -162,6 +160,6 @@ def get_jason_charts(selected_cancer, valid_genes):
         column=alt.Column('Sample_Types:N', header=alt.Header(title=None)) 
     ).properties(width=180, title='Variant Classification Count')
 
-    combined_heatmap = amp_heatmap & del_heatmap & mut_heatmap & cna_chart & vc_chart
+    all_chart = amp_heatmap & del_heatmap & mut_heatmap & cna_chart & vc_chart
 
-    return combined_heatmap
+    return all_chart
