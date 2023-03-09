@@ -77,11 +77,6 @@ def build_heatmap(heatmap_df, selector):
     )
 
 def build_chart(heatmap_df, selector):
-    mut_bar = alt.Chart(heatmap_df).mark_bar().encode(
-        x='Mutation:Q',
-        y='Organ:N'
-    ).transform_filter(selector)
-
     cna_df = pd.melt(heatmap_df,
                      id_vars=['Gene', 'Organ'],
                      value_vars=['Amplification', 'Deletion'],
@@ -98,4 +93,10 @@ def build_chart(heatmap_df, selector):
         row='Organ:N'
     ).transform_filter(selector)
 
-    return alt.vconcat(mut_bar, cna_bar)
+    mut_bar = alt.Chart(heatmap_df).mark_bar().encode(
+        x='Mutation:Q',
+        y='Organ:N',
+        color=alt.value('green')
+    ).transform_filter(selector)
+
+    return alt.vconcat(cna_bar, mut_bar)
