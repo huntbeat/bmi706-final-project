@@ -90,7 +90,7 @@ def build_chart(heatmap_df, selector):
         color=alt.Color(
             'CNA type:N',
             scale=alt.Scale(domain=['Amplification', 'Deletion'], range=['red', 'blue'])),
-        row='Organ:N'
+        row=alt.Row('Organ:N', header=alt.Header(labelAngle=0)),
     ).transform_filter(selector)
 
     mut_bar = alt.Chart(heatmap_df).mark_bar().encode(
