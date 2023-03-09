@@ -103,17 +103,17 @@ def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
 
     # Create Amplification heatmap
     amp_heatmap = base.mark_rect().encode(
-        alt.Color('Amplification_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
+        alt.Color('Amplification_Fraction:Q', scale=alt.Scale(scheme='reds')),
     ).properties(width=500,title='Amplification Heatmap')
 
     # Create Deletion heatmap
     del_heatmap = base.mark_rect().encode(
-        alt.Color('Deletion_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
+        alt.Color('Deletion_Fraction:Q', scale=alt.Scale(scheme='blues')),
     ).properties(width=500,title='Deletion Heatmap')
 
     # Create Mutation heatmap
     mut_heatmap = base.mark_rect().encode(
-        alt.Color('Mutation_Fraction:Q', scale=alt.Scale(scheme='greenblue')),
+        alt.Color('Mutation_Fraction:Q', scale=alt.Scale(scheme='greens')),
     ).properties(width=500,title='Mutation Heatmap')
   
     #cna plot
@@ -132,7 +132,8 @@ def get_jason_charts(selected_cancer, valid_genes, cna_df, mut_df, sample_df):
     cna_chart = alt.Chart(cna_counts).mark_bar().encode(
         x='Gene:N',
         y='Count:Q',
-        color=alt.Color('Copy_Number_Status:N', scale=alt.Scale(domain=['Deletion', 'Amplification'])),
+        color=alt.Color('Copy_Number_Status:N', scale=alt.Scale(domain=['Deletion', 'Amplification'],
+                                                                range=['blue', 'red'])),
         column= alt.Column('Sample_Types:N', header=alt.Header(title=None)) 
     ).properties(
         width=180,title='Copy Number Count')
