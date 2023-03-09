@@ -91,12 +91,14 @@ def build_chart(heatmap_df, selector):
             'CNA type:N',
             scale=alt.Scale(domain=['Amplification', 'Deletion'], range=['red', 'blue'])),
         row=alt.Row('Organ:N', header=alt.Header(labelAngle=0)),
+        tooltip=['Gene', 'Organ', 'Count']
     ).transform_filter(selector)
 
     mut_bar = alt.Chart(heatmap_df).mark_bar().encode(
         x='Mutation:Q',
         y='Organ:N',
-        color=alt.value('green')
+        color=alt.value('green'),
+        tooltip=['Gene', 'Organ', 'Mutation']
     ).transform_filter(selector)
 
     return alt.vconcat(cna_bar, mut_bar)
