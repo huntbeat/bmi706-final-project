@@ -3,7 +3,6 @@ import pandas as pd
 import streamlit as st
 #Disable the row limit
 
-@st.cache_data
 
 def count_amplification(df, gene, sample_type):
     return df[(df[f'cna_{gene}'] > 0) & (df['Sample_Types'] == sample_type)]['SAMPLE_ID'].nunique()

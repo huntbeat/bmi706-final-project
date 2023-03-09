@@ -68,6 +68,12 @@ valid_mutation_types = all_mutations
 
 all_organs = list(filter(lambda column_name: "DMETS_DX_" in column_name, sample_df.columns))
 
+filtered_mut_df = mut_df[mut_df['Consequence'].isin(valid_mutation_types)]
+filtered_cna_df = cna_df
+cna_genes = set(filtered_cna_df['Hugo_Symbol'].dropna().unique())
+mut_genes = set(filtered_mut_df['Hugo_Symbol'].dropna().unique())
+valid_genes = list(cna_genes.intersection(mut_genes))
+
 # Add sidebar features
 with st.sidebar:
     figure_radio = st.radio(
@@ -88,55 +94,49 @@ with st.sidebar:
     st.markdown("#")
     st.image("hms_logo.png", width=300)
 
-filtered_mut_df = mut_df[mut_df['Consequence'].isin(valid_mutation_types)]
-filtered_cna_df = cna_df
 
-if True:
-    sample_df_filtered_cancer_types = sample_df[sample_df["CANCER_TYPE"].isin(["Breast Cancer"])]
-else:
-    sample_df_filtered_cancer_types = sample_df
+@st.cache_data
+def get_merged_sample_df(cancer_type, filtered_mut_df, filtered_cna_df):
+    sample_df_filtered_cancer_types = sample_df[sample_df["CANCER_TYPE"].isin([cancer_type])]
 
-# Next, we'll merge copy number alternation data for each of the filtered samples.
-# 1. Transpose the CNA dataframe to turn the sample ID into indices. This will ease the merge.
-cna_genes = set(filtered_cna_df['Hugo_Symbol'].dropna().unique())
-filtered_cna_df_T = filtered_cna_df.set_index('Hugo_Symbol').T
-filtered_cna_df_T.reset_index(inplace=True)
-filtered_cna_df_T = filtered_cna_df_T.add_prefix("cna_")
-filtered_cna_df_T = filtered_cna_df_T.rename(columns={'cna_index': 'SAMPLE_ID'})
-# 2. Merge CNA into sample table.
-sample_cna_df_filtered_cancer_types = sample_df_filtered_cancer_types.merge(filtered_cna_df_T,
-                                                                            on='SAMPLE_ID',
-                                                                            # Left is filtered, right is not
-                                                                            how='left')
-# 3. Wrangle with mutation dataframe.
-mut_genes = set(filtered_mut_df['Hugo_Symbol'].dropna().unique())
-filtered_mut_df = filtered_mut_df[["Hugo_Symbol", "Tumor_Sample_Barcode", "Consequence"]]
-filtered_mut_df = filtered_mut_df.groupby(["Tumor_Sample_Barcode", "Hugo_Symbol"]).size().reset_index(name='Count')
-filtered_mut_df = pd.pivot(filtered_mut_df, columns=['Hugo_Symbol'], index=["Tumor_Sample_Barcode"],
-                           values="Count").add_prefix("mut_").reset_index()
-filtered_mut_df = filtered_mut_df.rename(columns={'Tumor_Sample_Barcode': 'SAMPLE_ID'})
-# 4. Merge mutation into sample table.
-merged_sample_df = sample_cna_df_filtered_cancer_types.merge(filtered_mut_df,
-                                                             on='SAMPLE_ID',
-                                                             # Left is filtered by cancer type, right is not
-                                                             how='left')
-merged_sample_df = merged_sample_df.fillna(0)
+    # Next, we'll merge copy number alternation data for each of the filtered samples.
+    # 1. Transpose the CNA dataframe to turn the sample ID into indices. This will ease the merge.
+    filtered_cna_df_T = filtered_cna_df.set_index('Hugo_Symbol').T
+    filtered_cna_df_T.reset_index(inplace=True)
+    filtered_cna_df_T = filtered_cna_df_T.add_prefix("cna_")
+    filtered_cna_df_T = filtered_cna_df_T.rename(columns={'cna_index': 'SAMPLE_ID'})
+    # 2. Merge CNA into sample table.
+    sample_cna_df_filtered_cancer_types = sample_df_filtered_cancer_types.merge(filtered_cna_df_T,
+                                                                                on='SAMPLE_ID',
+                                                                                # Left is filtered, right is not
+                                                                                how='left')
+    # 3. Wrangle with mutation dataframe.
+    filtered_mut_df = filtered_mut_df[["Hugo_Symbol", "Tumor_Sample_Barcode", "Consequence"]]
+    filtered_mut_df = filtered_mut_df.groupby(["Tumor_Sample_Barcode", "Hugo_Symbol"]).size().reset_index(name='Count')
+    filtered_mut_df = pd.pivot(filtered_mut_df, columns=['Hugo_Symbol'], index=["Tumor_Sample_Barcode"],
+                               values="Count").add_prefix("mut_").reset_index()
+    filtered_mut_df = filtered_mut_df.rename(columns={'Tumor_Sample_Barcode': 'SAMPLE_ID'})
+    # 4. Merge mutation into sample table.
+    _merged_sample_df = sample_cna_df_filtered_cancer_types.merge(filtered_mut_df,
+                                                                 on='SAMPLE_ID',
+                                                                 # Left is filtered by cancer type, right is not
+                                                                 how='left')
+    _merged_sample_df = _merged_sample_df.fillna(0)
+    return _merged_sample_df
+
+merged_sample_df = get_merged_sample_df(selected_cancer, filtered_mut_df, filtered_cna_df)
 
 if figure_radio == "Clinical information":
     seunghun_chart = get_seunghun_charts(selected_cancer, all_cancer_types)
     st.altair_chart(seunghun_chart, use_container_width=True)
 elif figure_radio == "Primary vs Metastasis":
-    valid_genes = list(cna_genes.intersection(mut_genes))
     default_genes = valid_genes[:10]
     selected_genes = st.sidebar.multiselect("Choose genes", valid_genes, default_genes)
     jason_chart = get_jason_charts(selected_cancer, selected_genes, cna_df, mut_df, cli_sample_df)
     st.altair_chart(jason_chart, use_container_width=True)
 elif figure_radio == "Difference in organ sites":
     with st.spinner("Loading... It's a lot of genes, may take a minute or two."):
-        valid_genes = list(cna_genes.intersection(mut_genes))
-        heatmap_df = build_heatmap_df(merged_sample_df, valid_genes, all_organs)
-        st.write(build_heatmap(heatmap_df))
-        st.write(build_chart(heatmap_df, 'NCOR1'))
-
-# with col3:
-#    st.write("")
+        heatmap_df, selector = build_heatmap_df_and_selector(merged_sample_df, valid_genes, all_organs)
+        heatmap = build_heatmap(heatmap_df, selector)
+        bar_chart = build_chart(heatmap_df, selector)
+        st.altair_chart(heatmap & bar_chart, use_container_width=True)
