@@ -58,7 +58,7 @@ def build_heatmap(heatmap_df, selector):
     # Create Deletion heatmap
     del_heatmap = alt.Chart(heatmap_df).mark_rect().encode(
         alt.X('Gene:N'),
-        alt.Y('Organ:N', axis=alt.Axis(labels=False)),
+        alt.Y('Organ:N'),
         alt.Color('Deletion_Fraction:Q', scale=alt.Scale(scheme='blues')),
         opacity=alt.Opacity('Deletion_Fraction:Q')
     ).add_selection(selector).properties(title='Deletion Heatmap')
@@ -66,22 +66,25 @@ def build_heatmap(heatmap_df, selector):
     # Create Mutation heatmap
     mut_heatmap = alt.Chart(heatmap_df).mark_rect().encode(
         alt.X('Gene:N'),
-        alt.Y('Organ:N', axis=alt.Axis(labels=False)),
+        alt.Y('Organ:N'),
         alt.Color('Mutation_Fraction:Q', scale=alt.Scale(scheme='greens')),
         opacity=alt.Opacity('Mutation_Fraction:Q'),
     ).add_selection(selector).properties(title='Mutation Heatmap')
 
-    final_heatmap = alt.hconcat(
+    return alt.vconcat(
         amp_heatmap,
         del_heatmap,
         mut_heatmap
     ).resolve_scale(
-        y='shared'
+        color='independent'
     )
 
-    return final_heatmap
-
 def build_chart(heatmap_df, selector):
+    mut_bar = alt.Chart(heatmap_df).mark_bar().encode(
+        x='Mutation:Q',
+        y='Organ:N'
+    ).transform_filter(selector)
+
     cna_df = pd.melt(heatmap_df,
                      id_vars=['Gene', 'Organ'],
                      value_vars=['Amplification', 'Deletion'],
@@ -89,16 +92,11 @@ def build_chart(heatmap_df, selector):
                      value_name='Count')
     cna_df['Count'] = cna_df['Count'].abs()
 
-    cna_bar = alt.Chart().mark_bar().encode(
-        x='CNA type:N',
-        y='Count:Q',
+    cna_bar = alt.Chart(cna_df).mark_bar().encode(
+        x='Count:Q',
+        y='CNA type:N',
         color='CNA type:N',
-        column='Organ:N'
+        row='Organ:N'
     ).transform_filter(selector)
 
-    mut_bar = alt.Chart(heatmap_df).mark_bar().encode(
-        x='Organ:N',
-        y='Mutation:Q'
-    ).transform_filter(selector)
-
-    return alt.vconcat(cna_bar, mut_bar, data=cna_df)
+    return alt.vconcat(mut_bar, cna_bar)

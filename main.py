@@ -137,6 +137,8 @@ elif figure_radio == "Primary vs Metastasis":
 elif figure_radio == "Difference in organ sites":
     with st.spinner("Loading... It's a lot of genes, may take a minute or two."):
         heatmap_df, selector = build_heatmap_df_and_selector(merged_sample_df, valid_genes, all_organs)
-        heatmap = build_heatmap(heatmap_df, selector)
-        bar_chart = build_chart(heatmap_df, selector)
-        st.altair_chart(heatmap & bar_chart, use_container_width=True)
+        final_chart = alt.hconcat(
+            build_heatmap(heatmap_df, selector),
+            build_chart(heatmap_df, selector)
+        )
+        st.altair_chart(final_chart, use_container_width=True)
