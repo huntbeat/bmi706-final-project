@@ -52,7 +52,6 @@ def build_heatmap(heatmap_df, selector):
         alt.X('Gene:N'),
         alt.Y('Organ:N'),
         alt.Color('Amplification_Fraction:Q', scale=alt.Scale(scheme='reds')),
-        opacity=alt.Opacity('Amplification_Fraction:Q'),
     ).add_selection(selector).properties(title='Amplification Heatmap')
 
     # Create Deletion heatmap
@@ -60,7 +59,6 @@ def build_heatmap(heatmap_df, selector):
         alt.X('Gene:N'),
         alt.Y('Organ:N'),
         alt.Color('Deletion_Fraction:Q', scale=alt.Scale(scheme='blues')),
-        opacity=alt.Opacity('Deletion_Fraction:Q')
     ).add_selection(selector).properties(title='Deletion Heatmap')
 
     # Create Mutation heatmap
@@ -68,7 +66,6 @@ def build_heatmap(heatmap_df, selector):
         alt.X('Gene:N'),
         alt.Y('Organ:N'),
         alt.Color('Mutation_Fraction:Q', scale=alt.Scale(scheme='greens')),
-        opacity=alt.Opacity('Mutation_Fraction:Q'),
     ).add_selection(selector).properties(title='Mutation Heatmap')
 
     return alt.vconcat(
