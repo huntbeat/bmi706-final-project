@@ -95,7 +95,9 @@ def build_chart(heatmap_df, selector):
     cna_bar = alt.Chart(cna_df).mark_bar().encode(
         x='Count:Q',
         y='CNA type:N',
-        color='CNA type:N',
+        color=alt.Color(
+            'CNA type:N',
+            scale=alt.Scale(domain=['Amplification', 'Deletion'], range=['red', 'blue'])),
         row='Organ:N'
     ).transform_filter(selector)
 
